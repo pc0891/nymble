@@ -5,6 +5,7 @@
 #include <conio.h>
 #include <time.h>
 
+//function to wait for MCU to singal it is ready to receive again
 char waitTillMCUready(HANDLE hFile)
 {
 	char controlFlag, loopCount;
@@ -24,6 +25,7 @@ char waitTillMCUready(HANDLE hFile)
 		return 0;
 }
 
+//function to send acknowledgement to MCU that block of characters has been received and it can transmit more characters
 char sendACK(HANDLE hFile)
 {
 	char ch=17;
@@ -45,19 +47,20 @@ int main()
 	clock_t startTime, endTime;
 	double duration, dataRate;
 	
-	HANDLE pcAVRcom=openSerialPort("COM4",B2400,one,off);
+	HANDLE pcAVRcom=openSerialPort("COM4",B2400,one,off); //open COM port
 	
 	textCount=0;
 	endOfText=0;
 	bytesWritten=0;
 	
-	startTime=clock();
+	startTime=clock(); //record start time of transmission
 	
 	printf("Nymble Assignment Demo\n");
 	printf("Data transfer rate below\n");
 	
 	do
 	{
+		//send text in blocks of 5 characters
 		for(bufferCount=0;bufferCount<5;bufferCount++)
 		{
 			if(text[textCount]!='\0')
@@ -74,7 +77,7 @@ int main()
 			sendBuffer[bufferCount++]=4;
 		bytesWritten+=writeToSerialPort(pcAVRcom,sendBuffer,bufferCount);
 		
-		
+		//display data transfer rate every 0.5 seconds
 		endTime=clock();
 		duration=((double)(endTime-startTime))/CLOCKS_PER_SEC;
 		if((duration>=0.5))
@@ -84,6 +87,7 @@ int main()
 			fflush(stdout);
 		}
 		
+		//wait till MCU is ready to receive another block of text
 		if(waitTillMCUready(pcAVRcom)==0)
 		{
 			printf("MCU ACK Fail\n");
@@ -97,11 +101,13 @@ int main()
 	bytesRead=0;
 	textCount=0;
 
-	startTime=clock();
+	startTime=clock(); //record start of reception
 	
 	do
 	{
 		bytesRead+=readFromSerialPort(pcAVRcom,recBuffer,6);
+		
+		//display data transfer rate every 0.5 seconds
 		endTime=clock();
 		duration=((double)(endTime-startTime))/CLOCKS_PER_SEC;
 		if((duration>=0.5))
@@ -110,12 +116,13 @@ int main()
 			printf("\r%0.2f",dataRate);
 			fflush(stdout);
 		}
+		
 		for(bufferCount=0;bufferCount<6;bufferCount++)
 		{
 			switch(recBuffer[bufferCount])
 			{
-				case 4:
-					if(sendACK(pcAVRcom)==0)
+				case 4:   //received end of block character
+					if(sendACK(pcAVRcom)==0)  //send acknowledgment that block of text successfully received
 					{
 						printf("Send ACK Failed\n");
 						if(!closeSerialPort(pcAVRcom))
@@ -123,8 +130,8 @@ int main()
 						return 0;
 					}
 					break;
-				case 3:
-					if(sendACK(pcAVRcom)==0)
+				case 3:  //received end of text character
+					if(sendACK(pcAVRcom)==0)  //send acknowledgement that entire text successfully received
 					{
 						printf("Send ACK Failed\n");
 						if(!closeSerialPort(pcAVRcom))
@@ -143,10 +150,10 @@ int main()
 	}while(endOfText==0);
 	
 	recText[textCount]='\0';
-	printf("\n%s\n",recText);
+	printf("\n%s\n",recText); // print the received text from MCU
 	
 
-	if(!closeSerialPort(pcAVRcom))
+	if(!closeSerialPort(pcAVRcom)) //close COM port
 			printf("Error: Closing Port failed");	
 	return 0;
 }

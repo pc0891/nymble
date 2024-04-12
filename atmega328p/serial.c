@@ -2,7 +2,7 @@
  * serial.c
  *
  * Created: 11/04/2024 14:11:10
- *  Author: pramo
+ *  Author: pramod
  */ 
 #include "serial.h"
 #include <avr/io.h>
@@ -11,6 +11,7 @@
 volatile char bufferRx[100], bufferTx[100];
 volatile unsigned char count, endOfRx , endOfBlockRx, sendACK, endOfBlockTx, getACK ,ch;
 
+//intialize UART interrupt
 void uartInit()
 {
 	UCSR0B |= (1<<RXCIE0) | (1<<TXCIE0) | (1<<RXEN0) | (1<<TXEN0);
@@ -19,6 +20,7 @@ void uartInit()
 	UBRR0H = 1;
 }
 
+//receive interrupt routine
 ISR (USART_RX_vect)
 {
 	if(getACK!=1)
@@ -48,6 +50,7 @@ ISR (USART_RX_vect)
 	}
 }
 
+//trasmit interrupt routine
 ISR (USART_TX_vect)
 {
 	if(sendACK!=1)
