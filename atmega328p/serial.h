@@ -8,8 +8,8 @@
 #define __SERIAL_H_
 
 #define F_CPU 16000000UL
-//#define USART_BAUDRATE 2400
-//#define BAUD_PRESCALE (((F_CPU / (USART_BAUDRATE * 16UL))) - 1)
+#define USART_BAUDRATE 2400
+#define BAUD_PRESCALE (((F_CPU / (USART_BAUDRATE * 16UL))) - 1)
 
 extern volatile unsigned char count, endOfRx, endOfBlockRx, sendACK, endOfBlockTx, getACK;
 extern volatile char bufferRx[100], bufferTx[100];
